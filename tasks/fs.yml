@@ -1,0 +1,257 @@
+- name: Refresh PV information
+  ansible.builtin.command:
+    argv:
+      - udevadm
+      - trigger
+      - --settle
+      - --name-match
+      - "{{ item }}"
+  loop: "{{ fs.pvs }}"
+  changed_when: false
+  become: true
+
+- name: Create shared volume group
+  community.general.lvg:
+    vg: "{{ fs.vg }}"
+    # The lvg module requires a comma-separated string instead of a list...
+    pvs: "{{ fs.pvs | join(',') }}"
+    vg_options: '--shared'
+  run_once: true
+
+- name: Start volume group locking
+  ansible.builtin.command:
+    argv:
+      - vgchange
+      - --lock-start
+      - "{{ fs.vg }}"
+  register: vgchange_output
+  changed_when: "'starting dlm lockspace' in vgchange_output.stdout"
+  any_errors_fatal: true
+  become: true
+
+- name: Create shared logical volume
+  community.general.lvol:
+    vg: "{{ fs.vg }}"
+    lv: "{{ fs.lv }}"
+    # Don't use %VG, %FREE etc. here as they are not idempotent
+    size: "{{ fs.lv_size }}"
+    opts: --activate sy
+    shrink: false
+  register: lvol_result
+  failed_when:
+    - lvol_result.err is defined
+    - "'LV locked by other host' not in lvol_result.err"
+  run_once: true
+
+- name: Set logical volume resource name
+  vars:
+    default_resource_name_lv: "{{ fs.vg }}-{{ fs.lv }}"
+  ansible.builtin.set_fact:
+    resource_name_lv: "{{ fs.resource_name_lv | default(default_resource_name_lv) }}"
+
+- name: Set file system group name
+  vars:
+    default_group_name_fs: "{{ fs.name }}-group"
+  ansible.builtin.set_fact:
+    group_name_fs: "{{ fs.group_name_fs | default(default_group_name_fs) }}"
+
+- name: Check whether the logical volume activation resource exists
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - resource
+      - status
+      - "{{ resource_name_lv }}"
+  register: lv_resource_exists
+  failed_when: false
+  changed_when: false
+
+- name: Create logical volume activation resource
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - resource
+      - create
+      - "{{ resource_name_lv }}"
+      - --group
+      - "{{ group_name_fs }}"
+      - ocf:heartbeat:LVM-activate
+      - "lvname={{ fs.lv }}"
+      - "vgname={{ fs.vg }}"
+      - activation_mode=shared
+      - vg_access_mode=lvmlockd
+      - --wait
+  when: lv_resource_exists.rc != 0
+  run_once: true
+
+- name: Clone file system-specific resource group
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - resource
+      - clone
+      - "{{ group_name_fs }}"
+      - interleave=true
+      - --wait
+  register: fs_clone_result
+  failed_when:
+    - fs_clone_result.rc != 0
+    - "'already been cloned' not in fs_clone_result.stderr"
+  changed_when: fs_clone_result.rc == 0
+  run_once: true
+
+- name: Set ordering constraint between locking and file system resource groups
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - constraint
+      - order
+      - start
+      - "{{ gfs2_group_name_locking }}-clone"
+      - then
+      - "{{ group_name_fs }}-clone"
+  register: ordering_result
+  failed_when:
+    - ordering_result.rc != 0
+    - "'duplicate constraint already exists' not in ordering_result.stderr"
+  changed_when: ordering_result.rc == 0
+  run_once: true
+
+- name: Set colocation constraint between locking and file system resource groups
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - constraint
+      - colocation
+      - add
+      - "{{ group_name_fs }}-clone"
+      - with
+      - "{{ gfs2_group_name_locking }}-clone"
+  register: colo_result
+  failed_when:
+    - colo_result.rc != 0
+    - "'duplicate constraint already exists' not in colo_result.stderr"
+  changed_when: colo_result.rc == 0
+  run_once: true
+
+- name: Check logical volume path exists
+  ansible.builtin.stat:
+    path: "/dev/mapper/{{ fs.vg }}-{{ fs.lv }}"
+    follow: true
+    get_checksum: no
+  register: lv_path
+  changed_when: false
+  failed_when: not lv_path.stat.exists
+  any_errors_fatal: true
+  become: true
+
+- name: Refresh logical volume information
+  ansible.builtin.command:
+    argv:
+      - udevadm
+      - trigger
+      - --settle
+      - --name-match
+      - "{{ lv_path.stat.path }}"
+  changed_when: false
+  become: true
+
+- name: Determine device contents
+  ansible.builtin.command:
+    argv:
+      - lsblk
+      - -n
+      - -o
+      - FSTYPE
+      - "{{ lv_path.stat.path }}"
+  register: device_contents
+  failed_when:
+    - device_contents.stdout | length != 0
+    - device_contents.stdout != "gfs2"
+  changed_when: false
+  any_errors_fatal: true
+  become: true
+
+- name: Consult the existing gfs2 superblock
+  ansible.builtin.command:
+    argv:
+      - tunegfs2
+      - -l
+      - "{{ lv_path.stat.path }}"
+  register: tunegfs2_result
+  when:
+    - device_contents.stdout == "gfs2"
+  changed_when: false
+  become: true
+
+- name: Check whether the existing gfs2 filesystem is listed in gfs2_managed_uuids
+  ansible.builtin.set_fact:
+    found_uuid: "{{ tunegfs2_result.stdout | regex_search('UUID: (.*)', '\\1', multiline=True) | first }}"
+  failed_when:
+    - found_uuid not in gfs2_managed_uuids
+  when: tunegfs2_result.stdout is defined
+
+- name: Create gfs2 file system
+  ansible.builtin.command:
+    argv:
+      - mkfs.gfs2
+      - -O
+      - -D
+      - -t
+      - "{{ gfs2_cluster_name }}:{{ fs.name }}"
+      - -j
+      - "{{ fs.journals | default(gfs2_default_journals) }}"
+      - "{{ lv_path.stat.path }}"
+  when:
+    - lv_path.stat.isblk
+    - device_contents.stdout | length == 0
+    - found_uuid is not defined
+  run_once: true
+  become: true
+
+- name: Create mount point
+  ansible.builtin.file:
+    path: "{{ fs.mount_point }}"
+    state: directory
+    mode: '0755'
+  any_errors_fatal: true
+  become: true
+
+- name: Set gfs2 file system resource name
+  vars:
+    default_resource_name_fs: "gfs2-{{ fs.name }}"
+  ansible.builtin.set_fact:
+    resource_name_fs: "{{ fs.resource_name_fs | default(default_resource_name_fs) }}"
+
+- name: Check whether the gfs2 file system resource exists
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - resource
+      - status
+      - "{{ resource_name_fs }}"
+  register: fs_resource_exists
+  failed_when: false
+  changed_when: false
+
+- name: Create gfs2 file system resource
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - resource
+      - create
+      - "{{ resource_name_fs }}"
+      - --group
+      - "{{ group_name_fs }}"
+      - ocf:heartbeat:Filesystem
+      - "device={{ lv_path.stat.path }}"
+      - "directory={{ fs.mount_point }}"
+      - fstype=gfs2
+      - "options={{ fs.mount_options | join(',') }}"
+      - op
+      - monitor
+      - interval=10s
+      - on-fail=fence
+      - --wait
+  run_once: true
+  when: fs_resource_exists.rc != 0
