@@ -44,12 +44,14 @@ argument_specs:
         type: str
         required: true
         description: >
-          The name of the dlm_controld resource in the cluster.
+          The name of the dlm_controld resource in the cluster. This defaults
+          to 'dlm'.
       gfs2_group_name_locking:
         type: str
         required: true
         description: >
-          The name of the DLM/LVM locking resource group in the cluster.
+          The name of the DLM/LVM locking resource group in the cluster. This
+          defaults to 'locking'.
       gfs2_managed_uuids:
         type: list
         elements: str
