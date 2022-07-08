@@ -120,7 +120,7 @@ argument_specs:
           mount_options:
             type: list
             elements: str
-            required: true
+            required: false
             description: >
               gfs2 mount options. See the gfs2(5) man page.
           lv_size:
