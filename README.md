@@ -28,7 +28,7 @@ Example Playbooks
 ```yaml
 - hosts: cluster-virts
   vars:
-    gfs2_cluster_name: MyCluster
+    common_cluster_name: MyCluster
   pre_tasks:
     - name: Check whether cluster has been set up yet
       # A more robust check may be required
@@ -41,7 +41,7 @@ Example Playbooks
       ansible.builtin.include_role:
         name: linux-system-roles.ha_cluster
       vars:
-        ha_cluster_cluster_name: "{{ gfs2_cluster_name }}"
+        ha_cluster_cluster_name: "{{ common_cluster_name }}"
         ha_cluster_enable_repos: no
         # Users should vault-encrypt the password
         ha_cluster_hacluster_password: hunter2
@@ -58,6 +58,7 @@ Example Playbooks
   roles:
     - role: gfs2
       vars:
+        gfs2_cluster_name: "{{ common_cluster_name }}"
         # Specify 2 gfs2 file systems
         gfs2_file_systems:
           - name: fs1
