@@ -184,12 +184,13 @@
   changed_when: false
   become: true
 
-- name: Check whether the existing gfs2 filesystem is listed in gfs2_managed_uuids
+- name: Check whether the existing gfs2 file system UUID matches
   ansible.builtin.set_fact:
     found_uuid: "{{ tunegfs2_result.stdout | regex_search('UUID: (.*)', '\\1', multiline=True) | first }}"
   failed_when:
-    - found_uuid not in gfs2_managed_uuids
-  when: tunegfs2_result.stdout is defined
+    - found_uuid != fs.uuid
+  when:
+    - device_contents.stdout == "gfs2"
 
 - name: Create gfs2 file system
   ansible.builtin.command:
@@ -202,10 +203,24 @@
       - -j
       - "{{ fs.journals | default(gfs2_default_journals) }}"
       - "{{ lv_path.stat.path }}"
+  register: mkfs_result
   when:
     - lv_path.stat.isblk
     - device_contents.stdout | length == 0
     - found_uuid is not defined
+  run_once: true
+  become: true
+
+# mkfs.gfs2 does not yet have the ability to set the UUID so we set it using tunegfs2 separately
+- name: Set the UUID of new file system
+  ansible.builtin.command:
+    argv:
+      - tunegfs2
+      - -U
+      - "{{ fs.uuid }}"
+      - "{{ lv_path.stat.path }}"
+  when:
+    - mkfs_result.rc|default(1) == 0
   run_once: true
   become: true
 

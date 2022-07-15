@@ -91,11 +91,9 @@ Example Playbooks
         gfs2_resource_name_lvmlockd: lvm_locking
         gfs2_resource_name_dlm: dlm_control
         gfs2_group_name_locking: locking
-        gfs2_managed_uuids:
-          - c7f2ded3-bb4f-4c99-a526-e7c731bd6f55
-          - 3223c12a-ca61-475f-905b-bd0f4a5cff34
         gfs2_file_systems:
           - name: fs1
+            uuid: c7f2ded3-bb4f-4c99-a526-e7c731bd6f55
             resource_name_fs: gfs2-1
             pvs:
               - /dev/disk/by-path/virtio-pci-0000:00:08.0
@@ -108,6 +106,7 @@ Example Playbooks
             mount_options:
               - noatime
           - name: fs2
+            uuid: 3223c12a-ca61-475f-905b-bd0f4a5cff34
             resource_name_fs: gfs2-2
             pvs:
               - /dev/disk/by-path/virtio-pci-0000:01:00.0

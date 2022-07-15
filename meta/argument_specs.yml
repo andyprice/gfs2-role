@@ -21,13 +21,12 @@ argument_specs:
       The role errs on the side of caution when creating the file system. If
       the file system does not yet exist, the first time this role runs it will
       only create the gfs2 file system on the shared logical volume if an
-      existing file system signature is not detected. You may need to use
-      `wipefs` on the block device before continuing.
+      existing file system signature is not detected. You may need to inspect
+      the device's contents and use `wipefs` if appropriate before continuing.
       
-      On subsequent plays, if a file system signature is found then the role
-      will fail unless the UUID of the previously created file system has been
-      added to the `gfs2_managed_uuids` list and the file system name matches
-      one of the gfs2 file systems specified in `gfs2_file_systems`.
+      On subsequent plays, if an existing file system signature is found then
+      the role will fail unless the UUID of the previously created file system
+      matches the `uuid` of the `gfs2_file_systems` entry.
     options:
       gfs2_cluster_name:
         type: str
@@ -52,15 +51,6 @@ argument_specs:
         description: >
           The name of the DLM/LVM locking resource group in the cluster. This
           defaults to 'locking'.
-      gfs2_managed_uuids:
-        type: list
-        elements: str
-        required: true
-        description: >
-          A list of gfs2 file system UUIDs to consider managed, as displayed by
-          `tunegfs2 -l /dev/vgname/lvname`. If a target LV is not blank and
-          file systems not matching these UUIDs are detected then the mkfs
-          stage will fail for safety.
       gfs2_file_systems:
         type: list
         elements: dict
@@ -73,6 +63,19 @@ argument_specs:
             required: true
             description: >
               The file system name. See the mkfs.gfs2(8) man page for details.
+          uuid:
+            type: str
+            required: true
+            description: >
+              The UUID of the file system. This must be specified as a string
+              of hexadecimal digits separated by hyphens, of the form
+              "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx". An appropriate UUID can
+              be generated using the `uuidgen` command. If the logical volume
+              is found to be empty, the new gfs2 file system will be created
+              with this UUID.  If it is not empty, the existing file system
+              will be verified against this UUID. The command `tunegfs2 -l
+              /dev/vgname/lvname` can be used to find the UUID of an existing
+              gfs2 file system.
           journals:
             type: int
             required: false

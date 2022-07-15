@@ -8,6 +8,3 @@ gfs2_resource_name_dlm: "dlm"
 gfs2_group_name_locking: "locking"
 # Default number of journals is the number of hosts
 gfs2_default_journals: "{{ ansible_play_hosts_all | length }}"
-# No managed file systems by default
-gfs2_managed_uuids: []
-
