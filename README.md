@@ -62,6 +62,7 @@ Example Playbooks
         # Specify 2 gfs2 file systems
         gfs2_file_systems:
           - name: fs1
+            uuid: 4f0aedef-8f8c-4061-adaf-e3d5344db425
             pvs:
               - /dev/disk/by-path/virtio-pci-0000:00:08.0
             vg: vg_gfs2_1
@@ -69,6 +70,7 @@ Example Playbooks
             lv_size: 100G
             mount_point: /mnt/test1
           - name: fs2
+            uuid: 3b2391f5-de3f-4b78-95ea-2bd5320af0b8
             pvs:
               - /dev/disk/by-path/virtio-pci-0000:01:00.0
             vg: vg_gfs2_2
