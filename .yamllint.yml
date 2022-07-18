@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: MIT
+---
+extends: .yamllint_defaults.yml
+
+ignore: |
+  /.tox/
+
+rules:
+  line-length:
+    max: 100
+    level: error
