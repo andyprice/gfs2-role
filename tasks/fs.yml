@@ -186,7 +186,9 @@
 
 - name: Check whether the existing gfs2 file system UUID matches
   ansible.builtin.set_fact:
-    found_uuid: "{{ tunegfs2_result.stdout | regex_search('UUID: (.*)', '\\1', multiline=True) | first }}"
+    found_uuid: "{{ tunegfs2_result.stdout \
+                 | regex_search('UUID: (.*)', '\\1', multiline=True) \
+                 | first }}"
   failed_when:
     - found_uuid != fs.uuid
   when:
