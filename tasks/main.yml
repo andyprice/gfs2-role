@@ -75,7 +75,12 @@
   run_once: true
 
 - name: Check whether the lvmlockd resource exists
-  ansible.builtin.command: pcs resource status "{{ gfs2_resource_name_lvmlockd }}"
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - resource
+      - status
+      - "{{ gfs2_resource_name_lvmlockd }}"
   register: lockd_resource_exists
   failed_when: false
   changed_when: false

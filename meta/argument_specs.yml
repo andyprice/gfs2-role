@@ -23,7 +23,7 @@ argument_specs:
       only create the gfs2 file system on the shared logical volume if an
       existing file system signature is not detected. You may need to inspect
       the device's contents and use `wipefs` if appropriate before continuing.
-      
+
       On subsequent plays, if an existing file system signature is found then
       the role will fail unless the UUID of the previously created file system
       matches the `uuid` of the `gfs2_file_systems` entry.
