@@ -1,3 +1,7 @@
+- name: Merge file system specification with default values
+  ansible.builtin.set_fact:
+    fs: "{{ gfs2_fs_defaults | combine(fs_spec) }}"
+
 - name: Refresh PV information
   ansible.builtin.command:
     argv:

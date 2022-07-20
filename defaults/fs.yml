@@ -1,3 +1,0 @@
-# SPDX-License-Identifier: MIT
-
-journals: "{{ gfs2_default_journals }}"

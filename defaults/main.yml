@@ -6,5 +6,8 @@ gfs2_resource_name_lvmlockd: "lvm_locking"
 gfs2_resource_name_dlm: "dlm"
 # Default locking group name
 gfs2_group_name_locking: "locking"
-# Default number of journals is the number of hosts
-gfs2_default_journals: "{{ ansible_play_hosts_all | length }}"
+# File system defaults
+gfs2_fs_defaults:
+  # Default number of journals is the number of hosts
+  journals: "{{ ansible_play_hosts_all | length }}"
+  state: enabled

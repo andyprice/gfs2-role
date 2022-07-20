@@ -107,4 +107,4 @@
   include_tasks: fs.yml
   loop: "{{ gfs2_file_systems }}"
   loop_control:
-    loop_var: fs
+    loop_var: fs_spec
