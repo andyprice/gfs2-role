@@ -23,6 +23,25 @@ Dependencies
 Example Playbooks
 -----------------
 
+### Minimal example
+
+```yaml
+- hosts: myapp-servers
+  roles:
+    - role: gfs2
+      vars:
+        gfs2_cluster_name: myapp-cluster
+        gfs2_file_systems:
+          - name: myapp-shared-fs
+            uuid: 65cf62c9-c6e6-4008-9aa1-e3d170061aaa
+            pvs:
+              - /dev/disk/by-path/pci-0000:42:00.0-fc-0xf000-lun-1
+            vg: vg_myapp_shared
+            lv: lv_myapp_shared
+            lv_size: 100G
+            mount_point: /mnt/myapp-shared
+```
+
 ### Minimal example with cluster setup
 
 ```yaml
