@@ -50,8 +50,12 @@ Example Playbooks
     common_cluster_name: MyCluster
   pre_tasks:
     - name: Check whether cluster has been set up yet
-      # A more robust check may be required
-      ansible.builtin.command: pcs cluster status
+      # We do this because the ha_cluster role rebuilds the whole cluster
+      # config when it runs and removes any resources not specified in its
+      # variables.  It is safer to run ha_cluster in a separate one-off
+      # playbook which will not be used again after the gfs2 resources are
+      # created.
+      ansible.builtin.command: pcs stonith status
       register: cluster_exists
       changed_when: false
       failed_when: false
@@ -72,7 +76,9 @@ Example Playbooks
         ha_cluster_resource_primitives:
           - id: xvm-fencing
             agent: 'stonith:fence_xvm'
-      when: cluster_exists.rc != 0
+      when:
+        - cluster_exists.rc != 0
+          or "Started" not in cluster_exists.stdout
 
   roles:
     - role: gfs2

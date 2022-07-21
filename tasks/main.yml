@@ -1,3 +1,16 @@
+- name: Check for an active stonith resource
+  ansible.builtin.command:
+    argv:
+      - pcs
+      - stonith
+      - status
+  register: stonith_status
+  run_once: true
+  changed_when: false
+  failed_when:
+    - stonith_status.rc != 0
+      or "Started" not in stonith_status.stdout
+
 - name: Install required packages
   ansible.builtin.package:
     name:
