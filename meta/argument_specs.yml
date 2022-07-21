@@ -2,7 +2,7 @@
 
 argument_specs:
   main:
-    short_description: The main entry point for the gfs2 role.
+    short_description: The gfs2 role.
     description: >
       The gfs2 role allows you to create gfs2 file systems in a pacemaker
       cluster managed using `pcs`. Before this role is invoked, the cluster

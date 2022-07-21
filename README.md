@@ -50,11 +50,9 @@ Example Playbooks
     common_cluster_name: MyCluster
   pre_tasks:
     - name: Check whether cluster has been set up yet
-      # We do this because the ha_cluster role rebuilds the whole cluster
-      # config when it runs and removes any resources not specified in its
-      # variables.  It is safer to run ha_cluster in a separate one-off
-      # playbook which will not be used again after the gfs2 resources are
-      # created.
+      # We do this because the ha_cluster role removes any resources not specified
+      # by its variables. It is safer to run ha_cluster in a separate one-off
+      # playbook which will not be used again after the gfs2 resources are created.
       ansible.builtin.command: pcs stonith status
       register: cluster_exists
       changed_when: false
