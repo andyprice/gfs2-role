@@ -130,6 +130,7 @@ Example Playbooks
             mount_point: /mnt/test1
             mount_options:
               - noatime
+            state: enabled
           - name: fs2
             uuid: 3223c12a-ca61-475f-905b-bd0f4a5cff34
             resource_name_fs: gfs2-2
@@ -143,6 +144,7 @@ Example Playbooks
             mount_point: /mnt/test2
             mount_options:
               - rgrplvb
+            state: disabled
 ```
 
 License
