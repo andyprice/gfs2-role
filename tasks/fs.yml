@@ -292,14 +292,15 @@
     - fs.mount_options is defined
     - fs.mount_options | length > 0
 
-- name: Enable the gfs2 resource
+- name: Enable or disable the gfs2 resource
   ansible.builtin.command:
     argv:
       - pcs
       - resource
-      - enable
+      - "{{ {'disabled':'disable', 'enabled':'enable' }[fs.state] }}"
       - "{{ resource_name_fs }}"
       - --wait
   run_once: true
   when:
-    - fs_resource_exists.rc != 0
+    - fs.state == "enabled" and "Started:" not in fs_resource_exists.stdout
+      or fs.state == "disabled" and "Started:" in fs_resource_exists.stdout

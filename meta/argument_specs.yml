@@ -63,6 +63,18 @@ argument_specs:
             required: true
             description: >
               The file system name. See the mkfs.gfs2(8) man page for details.
+          state:
+            type: str
+            required: false
+            choices:
+              - enabled
+              - disabled
+            description: >
+              The intended state of the gfs2 file system. Defaults to
+              'enabled'.  'enabled' and 'disabled' map to the state of the
+              Filesystem resource in the cluster, effectively declaring whether
+              the gfs2 file system is mounted or unmounted. In both cases, the
+              file system resources will be created if they do not already exist.
           uuid:
             type: str
             required: true
