@@ -12,14 +12,7 @@
       or "Started" not in stonith_status.stdout
 
 - name: Install required packages
-  ansible.builtin.package:
-    name:
-      - gfs2-utils
-      - dlm
-      - lvm2-lockd
-    state: present
-  become: yes
-  any_errors_fatal: true
+  include_tasks: install-packages.yml
 
 - name: Check the cluster quorum policy
   ansible.builtin.command:

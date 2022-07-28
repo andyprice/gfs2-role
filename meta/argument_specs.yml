@@ -28,6 +28,12 @@ argument_specs:
       the role will fail unless the UUID of the previously created file system
       matches the `uuid` of the `gfs2_file_systems` entry.
     options:
+      gfs2_enable_repos:
+        type: bool
+        required: false
+        description: >
+          Whether to enable the repositories required to install the required
+          packages. Defaults to `true`.
       gfs2_cluster_name:
         type: str
         required: true

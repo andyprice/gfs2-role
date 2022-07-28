@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+
+__gfs2_repos: []
+__gfs2_packages:
+  - dlm
+  - lvm2-lockd
+  - gfs2-utils

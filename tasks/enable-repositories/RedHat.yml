@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MIT
+
+- name: List active RHEL repositories
+  command:
+    cmd: dnf repolist
+    warn: no
+  register: __gfs2_repolist
+  changed_when: no
+  check_mode: no
+
+- name: Enable RHEL repositories
+  command: subscription-manager repos --enable {{ item.id | quote }}
+  loop: "{{ __gfs2_repos }}"
+  when: item.name not in __gfs2_repolist.stdout
