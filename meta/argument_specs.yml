@@ -151,5 +151,5 @@ argument_specs:
             required: true
             description: >
               The size of the shared logical volume as required by `lvcreate
-              ---size`. Note that using dynamic values such as 100%FREE is not
+              --size`. Note that using dynamic values such as 100%FREE is not
               idempotent and it is better to use exact values such as 100G.
