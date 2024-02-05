@@ -23,10 +23,6 @@ argument_specs:
       only create the gfs2 file system on the shared logical volume if an
       existing file system signature is not detected. You may need to inspect
       the device's contents and use `wipefs` if appropriate before continuing.
-
-      On subsequent plays, if an existing file system signature is found then
-      the role will fail unless the UUID of the previously created file system
-      matches the `uuid` of the `gfs2_file_systems` entry.
     options:
       gfs2_enable_repos:
         type: bool
@@ -81,19 +77,6 @@ argument_specs:
               Filesystem resource in the cluster, effectively declaring whether
               the gfs2 file system is mounted or unmounted. In both cases, the
               file system resources will be created if they do not already exist.
-          uuid:
-            type: str
-            required: true
-            description: >
-              The UUID of the file system. This must be specified as a string
-              of hexadecimal digits separated by hyphens, of the form
-              "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx". An appropriate UUID can
-              be generated using the `uuidgen` command. If the logical volume
-              is found to be empty, the new gfs2 file system will be created
-              with this UUID.  If it is not empty, the existing file system
-              will be verified against this UUID. The command `tunegfs2 -l
-              /dev/vgname/lvname` can be used to find the UUID of an existing
-              gfs2 file system.
           journals:
             type: int
             required: false

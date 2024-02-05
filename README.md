@@ -17,8 +17,7 @@ See [meta/argument_specs.yml](meta/argument_specs.yml)
 Dependencies
 ------------
 
-- community.general.lvol
-- community.general.lvg
+- linux-system-roles.storage
 
 Example Playbooks
 -----------------
@@ -33,7 +32,6 @@ Example Playbooks
         gfs2_cluster_name: myapp-cluster
         gfs2_file_systems:
           - name: myapp-shared-fs
-            uuid: 65cf62c9-c6e6-4008-9aa1-e3d170061aaa
             pvs:
               - /dev/disk/by-path/pci-0000:42:00.0-fc-0xf000-lun-1
             vg: vg_myapp_shared
@@ -85,7 +83,6 @@ Example Playbooks
         # Specify 2 gfs2 file systems
         gfs2_file_systems:
           - name: fs1
-            uuid: 4f0aedef-8f8c-4061-adaf-e3d5344db425
             pvs:
               - /dev/disk/by-path/virtio-pci-0000:00:08.0
             vg: vg_gfs2_1
@@ -93,7 +90,6 @@ Example Playbooks
             lv_size: 100G
             mount_point: /mnt/test1
           - name: fs2
-            uuid: 3b2391f5-de3f-4b78-95ea-2bd5320af0b8
             pvs:
               - /dev/disk/by-path/virtio-pci-0000:01:00.0
             vg: vg_gfs2_2
@@ -118,7 +114,6 @@ Example Playbooks
         gfs2_group_name_locking: locking
         gfs2_file_systems:
           - name: fs1
-            uuid: c7f2ded3-bb4f-4c99-a526-e7c731bd6f55
             resource_name_fs: gfs2-1
             pvs:
               - /dev/disk/by-path/virtio-pci-0000:00:08.0
@@ -132,7 +127,6 @@ Example Playbooks
               - noatime
             state: enabled
           - name: fs2
-            uuid: 3223c12a-ca61-475f-905b-bd0f4a5cff34
             resource_name_fs: gfs2-2
             pvs:
               - /dev/disk/by-path/virtio-pci-0000:01:00.0
