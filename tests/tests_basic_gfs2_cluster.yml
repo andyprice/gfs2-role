@@ -1,0 +1,98 @@
+- name: Basic usability test
+  hosts: all
+  become: true
+  vars:
+    common_cluster_name: testcluster
+    mount_point: /mnt/test
+  tasks:
+    - name: Run the test
+      block:
+        # Make the host alias we specified in LSR_QEMU_IMAGE_ALIAS (tox.ini) resolve
+        - name: Update /etc/hosts
+          ansible.builtin.lineinfile:
+            path: /etc/hosts
+            line: 127.0.0.1 testnode
+
+        - name: Get unused disks
+          include_tasks: get_unused_disk.yml
+          vars:
+            min_size: "5g"
+            max_return: 1
+            disks_needed: 1
+
+        - name: Create cluster
+          ansible.builtin.include_role:
+            name: linux-system-roles.ha_cluster
+          vars:
+            ha_cluster_enable_repos: false
+            ha_cluster_cluster_name: "{{ common_cluster_name }}"
+            ha_cluster_hacluster_password: insecure
+            ha_cluster_extra_packages:
+              - dlm
+              - lvm2-lockd
+            ha_cluster_cluster_properties:
+              - attrs:
+                # Don't do this in production
+                - name: stonith-enabled
+                  value: 'false'
+
+        - name: Create gfs2 filesystem and cluster resources
+          include_role:
+            name: gfs2
+          vars:
+            _gfs2_test_allow_stonith_disabled: true
+            gfs2_cluster_name: "{{ common_cluster_name }}"
+            gfs2_file_systems:
+              - name: fs1
+                pvs:
+                  - "{{ unused.disks[0] }}"
+                vg: vg_gfs2_1
+                lv: lv_gfs2_1
+                lv_size: 4G
+                mount_point: "{{ mount_point }}"
+
+        - name: Create a file on the gfs2 filesystem
+          ansible.builtin.file:
+            path: "{{ mount_point }}/boop"
+            state: touch
+
+        - name: Run stat
+          ansible.builtin.command:
+            argv:
+              - stat
+              - -f
+              - "{{ mount_point }}/boop"
+          register: stat_result
+          failed_when: "'gfs/gfs2' not in stat_result.stdout"
+
+        - name: Re-run the role to test idempotency
+          include_role:
+            name: gfs2
+          vars:
+            _gfs2_test_allow_stonith_disabled: true
+            gfs2_cluster_name: "{{ common_cluster_name }}"
+            gfs2_file_systems:
+              - name: fs1
+                pvs:
+                  - "{{ unused.disks[0] }}"
+                vg: vg_gfs2_1
+                lv: lv_gfs2_1
+                lv_size: 4G
+                mount_point: "{{ mount_point }}"
+
+      always:
+        - name: Remove cluster
+          ansible.builtin.include_role:
+            name: linux-system-roles.ha_cluster
+          vars:
+            ha_cluster_enable_repos: false
+            ha_cluster_cluster_name: "{{ common_cluster_name }}"
+            ha_cluster_cluster_present: false
+
+        - name: Update /etc/hosts
+          ansible.builtin.lineinfile:
+            path: /etc/hosts
+            line: 127.0.0.1 testnode
+            state: absent
+
+

@@ -1,0 +1,12 @@
+- name: Find unused disks in the system
+  find_unused_disk:
+    min_size: "{{ min_size | default(omit) }}"
+    max_return: "{{ max_return | default(omit) }}"
+  register: unused
+  changed_when: false
+  failed_when:
+    - ("Unable to find unused disk" in unused.disks) or (unused.disks|length < disks_needed|default(1))
+
+- name: Print unused disks
+  debug:
+    var: unused

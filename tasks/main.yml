@@ -10,6 +10,7 @@
   failed_when:
     - stonith_status.rc != 0
       or "Started" not in stonith_status.stdout
+  when: not _gfs2_test_allow_stonith_disabled
 
 - name: Install required packages
   include_tasks: install-packages.yml
@@ -56,6 +57,7 @@
       - --group
       - "{{ gfs2_group_name_locking }}"
       - ocf:pacemaker:controld
+      - "allow_stonith_disabled={{ _gfs2_test_allow_stonith_disabled }}"
       - op
       - monitor
       - interval=30s
