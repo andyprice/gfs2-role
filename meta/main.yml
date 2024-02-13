@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: MIT
-
+---
 galaxy_info:
   author: Andrew Price <anprice@redhat.com>
   description: Configure and manage gfs2 file systems in a pacemaker cluster.
   company: Red Hat, Inc.
   license: MIT
-  min_ansible_version: 2.12
+  min_ansible_version: "2.12"
   platforms:
     - name: Fedora
       versions:

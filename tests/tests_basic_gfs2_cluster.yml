@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+---
 - name: Basic usability test
   hosts: all
   become: true
@@ -14,7 +16,7 @@
             line: 127.0.0.1 testnode
 
         - name: Get unused disks
-          include_tasks: get_unused_disk.yml
+          ansible.builtin.include_tasks: get_unused_disk.yml
           vars:
             min_size: "5g"
             max_return: 1
@@ -32,12 +34,12 @@
               - lvm2-lockd
             ha_cluster_cluster_properties:
               - attrs:
-                # Don't do this in production
-                - name: stonith-enabled
-                  value: 'false'
+                  # Don't do this in production
+                  - name: stonith-enabled
+                    value: 'false'
 
         - name: Create gfs2 filesystem and cluster resources
-          include_role:
+          ansible.builtin.include_role:
             name: gfs2
           vars:
             _gfs2_test_allow_stonith_disabled: true
@@ -55,6 +57,7 @@
           ansible.builtin.file:
             path: "{{ mount_point }}/boop"
             state: touch
+            mode: '0644'
 
         - name: Run stat
           ansible.builtin.command:
@@ -64,9 +67,10 @@
               - "{{ mount_point }}/boop"
           register: stat_result
           failed_when: "'gfs/gfs2' not in stat_result.stdout"
+          changed_when: true
 
         - name: Re-run the role to test idempotency
-          include_role:
+          ansible.builtin.include_role:
             name: gfs2
           vars:
             _gfs2_test_allow_stonith_disabled: true
@@ -94,5 +98,3 @@
             path: /etc/hosts
             line: 127.0.0.1 testnode
             state: absent
-
-

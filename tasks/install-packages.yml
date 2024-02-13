@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
-
+---
 - name: Find environment-specific tasks to enable repositories
-  set_fact:
+  ansible.builtin.set_fact:
     __gfs2_enable_repo_tasks_file: \
       "{{ __gfs2_enable_repo_tasks_file_candidate }}"
   loop:
@@ -21,7 +21,7 @@
     - __gfs2_enable_repo_tasks_file_candidate is file
 
 - name: Run environment-specific tasks to enable repositories
-  include_tasks: "{{ __gfs2_enable_repo_tasks_file }}"
+  ansible.builtin.include_tasks: "{{ __gfs2_enable_repo_tasks_file }}"
   when:
     - gfs2_enable_repos
     - __gfs2_enable_repo_tasks_file is defined

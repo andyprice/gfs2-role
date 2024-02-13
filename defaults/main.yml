@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
-
-gfs2_enable_repos: yes
+---
+gfs2_enable_repos: true
 # Default lvmlockd resource name
 gfs2_resource_name_lvmlockd: "lvm_locking"
 # Default dlm resource name

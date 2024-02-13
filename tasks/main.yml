@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+---
 - name: Check for an active stonith resource
   ansible.builtin.command:
     argv:
@@ -13,7 +15,7 @@
   when: not _gfs2_test_allow_stonith_disabled
 
 - name: Install required packages
-  include_tasks: install-packages.yml
+  ansible.builtin.include_tasks: install-packages.yml
 
 - name: Check the cluster quorum policy
   ansible.builtin.command:
@@ -35,6 +37,7 @@
       - no-quorum-policy=freeze
   when: "'no-quorum-policy: freeze' not in no_quorum_policy.stdout"
   run_once: true
+  changed_when: true
 
 - name: Check whether the dlm resource exists
   ansible.builtin.command:
@@ -65,6 +68,7 @@
       - --wait
   when: dlm_resource_exists.rc != 0
   run_once: true
+  changed_when: true
 
 - name: Clone locking resource group
   ansible.builtin.command:
@@ -110,9 +114,10 @@
       - --wait
   when: lockd_resource_exists.rc != 0
   run_once: true
+  changed_when: true
 
 - name: Configure file system-specific resources
-  include_tasks: fs.yml
+  ansible.builtin.include_tasks: fs.yml
   loop: "{{ gfs2_file_systems }}"
   loop_control:
     loop_var: fs_spec
